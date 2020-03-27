@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 void main() => (runApp(MyApp()));
 
@@ -35,7 +36,8 @@ class _HomePageState extends State<HomePage> {
     {"name":"Living Room", "noOfDevices":"5"},
     {"name":"Bedroom", "noOfDevices":"4"},
     {"name":"Kitchen", "noOfDevices":"6"},
-    {"name":"Garage", "noOfDevices":"2"}
+    {"name":"Garage", "noOfDevices":"2"},
+    {"name":"Bathroom", "noOfDevices":"3"}
   ];
 
   var children = <Widget>[];
@@ -61,6 +63,9 @@ class _HomePageState extends State<HomePage> {
   Widget _roomWidget(room, noOfDevices) {
     Icon icon;
     switch (room) {
+      case "Bathroom":
+        icon = new Icon(MdiIcons.shower, size: 50, color: Color.fromRGBO(0, 76, 153, 0.6),);
+        break;
       case "Bedroom":
         icon = new Icon(MdiIcons.bedKingOutline, size: 50, color: Color.fromRGBO(0, 76, 153, 0.6),);
         break;
@@ -134,18 +139,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _contentWidget() {
-    for(int i=0; i<rooms.length; i+=2) {
-      children.add(
-        new Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: <Widget>[
-            new Text(i.toString()),
-            _roomWidget(rooms[i]['name'], rooms[i]['noOfDevices']),
-            _roomWidget(rooms[i+1]['name'], rooms[i+1]['noOfDevices'])
-          ],
-        )
-      );
-    }
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -162,8 +155,9 @@ class _HomePageState extends State<HomePage> {
           ),
           Padding(
             padding: const EdgeInsets.only(left: 45.0, right: 45.0, bottom: 20.0),
-            child: new Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: new Wrap(
+              runSpacing: 10.0,
+              spacing: 10.0,
               children: children
             ),  
           ),
@@ -181,41 +175,81 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  RefreshController _refreshController = RefreshController(initialRefresh: true);
+
+  void _onRefresh() async{
+    await Future.delayed(Duration(milliseconds: 1000));
+
+    if(rooms.length != children.length) {
+      children.clear();
+      // for(int i=0; i<rooms.length; i+=2) {
+      //   setState(() {
+      //     children.add(
+      //       new Row(
+      //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      //         children: <Widget>[
+      //           _roomWidget(rooms[i]['name'], rooms[i]['noOfDevices']),
+      //           _roomWidget(rooms[i+1]['name'], rooms[i+1]['noOfDevices'])
+      //         ],
+      //       )
+      //     );
+      //   });
+      // }
+      for (var room in rooms){
+        setState(() {
+          children.add(
+            _roomWidget(room['name'], room['noOfDevices'])
+          );
+        });
+      }
+    }
+    
+    _refreshController.refreshCompleted();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(top: 35.0),
       child: new Scaffold(
-              body: new SingleChildScrollView(
-                child: new Center(
-                  child: new Column(
-                    children: <Widget>[
-                      new AppBar(
-                        title: new Text("Hi " + name + "!", style: new TextStyle(fontWeight: FontWeight.w500, fontSize: 30),),
-                        centerTitle: true,
-                        backgroundColor: Colors.transparent,
-                        elevation: 0.0,
-                        actions: <Widget>[
-                          Container(
-                            padding: EdgeInsets.symmetric(horizontal: 27.0, vertical: 9.0),
-                            width: 90,
-                            child: new CircleAvatar(
-                              backgroundImage: new AssetImage("assets/images/john.jpeg"),
-                              radius: 27,
+              body: Stack(
+                children: <Widget>[
+                  Container(height: MediaQuery.of(context).size.height, width: MediaQuery.of(context).size.width, child: new Image(image: new AssetImage("assets/images/homeBG.jpg"), fit: BoxFit.cover)),
+                  new SmartRefresher(
+                    controller: _refreshController,
+                    onRefresh: _onRefresh,
+                    child: new SingleChildScrollView(
+                      child: new Center(
+                        child: new Column(
+                          children: <Widget>[
+                            new AppBar(
+                              title: new Text("Hi " + name + "!", style: new TextStyle(fontWeight: FontWeight.w500, fontSize: 30),),
+                              centerTitle: true,
+                              backgroundColor: Colors.transparent,
+                              elevation: 0.0,
+                              actions: <Widget>[
+                                Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 27.0, vertical: 9.0),
+                                  width: 90,
+                                  child: new CircleAvatar(
+                                    backgroundImage: new AssetImage("assets/images/john.jpeg"),
+                                    radius: 27,
+                                  ),
+                                )
+                              ],
                             ),
-                          )
-                        ],
+                            Padding(
+                              padding: const EdgeInsets.only(top: 16.0, bottom: 120.0),
+                              child: new Text("Start managing your home", style: Theme.of(context).textTheme.display1),
+                            ),
+                            _contentWidget()
+                          ],
+                        )
                       ),
-                      Padding(
-                        padding: const EdgeInsets.only(top: 16.0, bottom: 120.0),
-                        child: new Text("Start managing your home", style: Theme.of(context).textTheme.display1),
-                      ),
-                      _contentWidget()
-                    ],
-                  )
-                ),
-              ),
-              backgroundColor: Colors.black,
+                    ),
+                  ),
+                ]
+              )
             ),
     );
   }
