@@ -44,10 +44,12 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-   - assets/images/bedroomBG.jpeg
-   - assets/images/homeBG.jpg
-   - assets/images/kitchenBG.jpg
-   - assets/images/roomBG.jpg
+   - assets/images/bathroom.jpg
+   - assets/images/bedroom.jpg
+   - assets/images/house.jpg
+   - assets/images/kitchen.jpg
+   - assets/images/livingRoom.jpg
+   - assets/images/garage.jpg
    - assets/images/john.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

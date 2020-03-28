@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 
+import 'room.dart';
+
 void main() => (runApp(MyApp()));
 
 class MyApp extends StatelessWidget {
@@ -39,9 +41,35 @@ class _HomePageState extends State<HomePage> {
     {"name":"Garage", "noOfDevices":"2"},
     {"name":"Bathroom", "noOfDevices":"3"}
   ];
+  List<Map<String, String>> members = [
+    {"name":"Cathey", "status":"active"},
+    {"name":"Freddie", "status":"active"},
+    {"name":"Brian", "status":"inactive"},
+    {"name":"Robert", "status":"active"},
+  ];
 
-  var children = <Widget>[];
+  var roomsChildren = <Widget>[];
+  var membersChildren = <Widget>[];
+  RefreshController _refreshController;
 
+  @protected
+  @mustCallSuper
+   void initState() {
+    super.initState();
+    WidgetsBinding.instance
+      .addPostFrameCallback((_) {
+        _createRoomWidget(); 
+        _createMemberWidget();
+      });
+    _refreshController = RefreshController(initialRefresh: false);
+  }
+
+  @override
+  void dispose(){
+    _refreshController.dispose();
+    super.dispose();
+  }
+  
   Widget _memberInfo(name, status){
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 15.0),
@@ -79,40 +107,43 @@ class _HomePageState extends State<HomePage> {
         icon = new Icon(MdiIcons.sofa, size: 40, color: Color.fromRGBO(0, 76, 153, 0.6),);
     }
 
-    return Card(
-      elevation: 10.0,
-      child: Container(
-        height: 140,
-        width: 140,
-        padding: EdgeInsets.all(10.0),
-        child: new Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            new Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget> [
-                new Container(
-                  height: 77,
-                  child: new Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      icon,
-                    ],
+    return GestureDetector(
+      onTap: () {Navigator.push(context, MaterialPageRoute(builder: (context) => RoomPage(room)));},
+      child: new Card(
+        elevation: 10.0,
+        child: Container(
+          height: 140,
+          width: 140,
+          padding: EdgeInsets.all(10.0),
+          child: new Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              new Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget> [
+                  new Container(
+                    height: 77,
+                    child: new Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        icon,
+                      ],
+                    ),
                   ),
-                ),
-                new Text(room, style: Theme.of(context).textTheme.display3,),
-                new Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    new Text(noOfDevices + " devices", style: Theme.of(context).textTheme.display4),
-                    new Icon(Icons.keyboard_arrow_right, color: Color.fromRGBO(0, 76, 153, 0.6),)
-                  ],
-                )
-              ]
-            )
-          ]
-        ),
-      )
+                  new Text(room, style: Theme.of(context).textTheme.display3,),
+                  new Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      new Text(noOfDevices + " devices", style: Theme.of(context).textTheme.display4),
+                      new Icon(Icons.keyboard_arrow_right, color: Color.fromRGBO(0, 76, 153, 0.6),)
+                    ],
+                  )
+                ]
+              )
+            ]
+          ),
+        )
+      ),
     );
   }
 
@@ -125,13 +156,7 @@ class _HomePageState extends State<HomePage> {
           padding: const EdgeInsets.all(32.0),
           child: new Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              _memberInfo("Cathy", "active"),
-              _memberInfo("Freddie", "active"),
-              _memberInfo("Brian", "inactive"),
-              _memberInfo("Robert", "active"),
-              _memberInfo("Micheal", "inactive")
-            ]
+            children: membersChildren
           ),
         ),
       ),
@@ -158,7 +183,7 @@ class _HomePageState extends State<HomePage> {
             child: new Wrap(
               runSpacing: 10.0,
               spacing: 10.0,
-              children: children
+              children: roomsChildren
             ),  
           ),
           new Divider(),
@@ -175,33 +200,37 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  RefreshController _refreshController = RefreshController(initialRefresh: true);
+  void _createRoomWidget() {
+    for (var room in rooms){
+      setState(() {
+        roomsChildren.add(
+          _roomWidget(room['name'], room['noOfDevices'])
+        );
+      });
+    }
+  }
+
+  void _createMemberWidget() {
+    for (var member in members) {
+      setState(() {
+        membersChildren.add(
+          _memberInfo(member['name'], member['status'])
+        );
+      });
+    }
+  }
 
   void _onRefresh() async{
-    await Future.delayed(Duration(milliseconds: 1000));
+    await Future.delayed(Duration(milliseconds: 100));
 
-    if(rooms.length != children.length) {
-      children.clear();
-      // for(int i=0; i<rooms.length; i+=2) {
-      //   setState(() {
-      //     children.add(
-      //       new Row(
-      //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      //         children: <Widget>[
-      //           _roomWidget(rooms[i]['name'], rooms[i]['noOfDevices']),
-      //           _roomWidget(rooms[i+1]['name'], rooms[i+1]['noOfDevices'])
-      //         ],
-      //       )
-      //     );
-      //   });
-      // }
-      for (var room in rooms){
-        setState(() {
-          children.add(
-            _roomWidget(room['name'], room['noOfDevices'])
-          );
-        });
-      }
+    if(rooms.length != roomsChildren.length) {
+      roomsChildren.clear();
+      _createRoomWidget();
+    }
+
+    if(members.length != membersChildren.length){
+      membersChildren.clear();
+      _createMemberWidget();
     }
     
     _refreshController.refreshCompleted();
@@ -214,7 +243,7 @@ class _HomePageState extends State<HomePage> {
       child: new Scaffold(
               body: Stack(
                 children: <Widget>[
-                  Container(height: MediaQuery.of(context).size.height, width: MediaQuery.of(context).size.width, child: new Image(image: new AssetImage("assets/images/homeBG.jpg"), fit: BoxFit.cover)),
+                  Container(height: MediaQuery.of(context).size.height/2, width: MediaQuery.of(context).size.width, child: new Image(image: new AssetImage("assets/images/house.jpg"), fit: BoxFit.cover)),
                   new SmartRefresher(
                     controller: _refreshController,
                     onRefresh: _onRefresh,
