@@ -51,13 +51,12 @@ class _RoomPageState extends State<RoomPage> with SingleTickerProviderStateMixin
     super.dispose();
   }
 
-  List<Map<String, String>> devices = [
-    {"name":"Lights", "status":"off"},
+  List devices = [
+    {"name":"Lights", "status":"Off"},
     {"name":"Temperature", "status":"25"},
-    {"name":"Router", "status":"on"},
-    {"name":"Coffee Maker", "status":"on"},
-    {"name":"Chimney", "status":"off"},
-    {"name":"Refrigirator", "status":"on"},
+    {"name":"Router", "status":"On"},
+    {"name":"Coffee Maker", "status":"On"},
+    {"name":"Refrigirator", "status":"Off"},
   ];
 
   void _onRefresh() async{
@@ -75,18 +74,47 @@ class _RoomPageState extends State<RoomPage> with SingleTickerProviderStateMixin
         deviceIcon = new Icon(MdiIcons.coffee);
         break;
       case "Router":
-        deviceIcon = new Icon(Icons.router);
+        deviceIcon = new Icon(Icons.wifi);
         break;
       case "Refrigirator":
-        deviceIcon = new Icon(MdiIcons.iceCream);
-        break;
-      case "Chimney":
-        deviceIcon = new Icon(MdiIcons.fireplace);
+        deviceIcon = new Icon(MdiIcons.fridgeOutline);
         break;
       default:
         deviceIcon = new Icon(Icons.lightbulb_outline);
     }
     return deviceIcon;
+  }
+
+  Widget _createDeviceTab(Map<String, String> device) {
+    if(device["name"] == "Temperature"){
+      return new Column(
+        children: <Widget>[
+          new Icon(MdiIcons.speedometer),
+          new GestureDetector(child: new Text(device["status"]))
+        ],
+      );
+    } else if(device["name"] == "Lights") {
+      return new Column(
+        children: <Widget>[
+          device["status"]=="On" ? new Icon(MdiIcons.lightbulbOnOutline, size: 150.0, color: Colors.white70,) : new Icon(MdiIcons.lightbulbOffOutline, size: 150.0, color: Colors.white70,),
+          new Text(device["status"], style: TextStyle(color: Colors.white70, fontSize: 20.0),)
+        ],
+      );
+    } else if(device["name"] == "Router") {
+      return new Column(
+        children: <Widget>[
+          device["status"]=="On" ? new Icon(Icons.wifi, size: 150.0, color: Colors.white70,) : new Icon(MdiIcons.wifiOff, size: 150.0, color: Colors.white70,),
+          new Text(device["status"], style: TextStyle(color: Colors.white70, fontSize: 20.0),)
+        ],
+      );
+    } else {
+      return new Column(
+        children: <Widget>[
+          device["status"]=="On" ? new Icon(MdiIcons.toggleSwitchOutline, size: 150.0, color: Colors.white70,) : new Icon(MdiIcons.toggleSwitchOffOutline, size: 150.0, color: Colors.white70,),
+          new Text(device["status"], style: TextStyle(color: Colors.white70, fontSize: 20.0),)
+        ],
+      );
+    }   
   }
 
   @override
@@ -101,46 +129,58 @@ class _RoomPageState extends State<RoomPage> with SingleTickerProviderStateMixin
           decoration: new BoxDecoration(
             image: DecorationImage(image: AssetImage(backgroundImagePath), fit: BoxFit.cover)
           ),
-          child: new Scaffold(
-            backgroundColor: Colors.transparent,
-            appBar: new AppBar(
-              title: new Text(this.room),
-              centerTitle: true,
-              leading: new GestureDetector(child: new Icon(Icons.chevron_left), onTap: () => Navigator.of(context).pop(),),
+          child: Padding(
+            padding: const EdgeInsets.only(top: 30.0),
+            child: new Scaffold(
               backgroundColor: Colors.transparent,
-              elevation: 0.0,
-              bottom: PreferredSize(
-                preferredSize: const Size.fromHeight(50.0),
-                child: TabBar(
-                  controller: _tabController,
-                  isScrollable: true,
-                  indicatorSize: TabBarIndicatorSize.tab,
-                  indicator: CircleTabIndicator(color: Colors.white, radius: 2),
-                  tabs: devices.map((device) {
-                    return Tab(
-                      text: device["name"],
-                      icon: _getDeviceIcon(device["name"]),
-                    );
-                  }).toList(),
-                ),
-              ),
-            ),
-            body: new Column(
-              children: <Widget>[
-                Expanded(
-                  child: new TabBarView(
-                    controller: _tabController,
-                    children: devices.map((device) {
-                      return new Container(
-                        height: MediaQuery.of(context).size.height/2,
-                        padding: EdgeInsets.all(25.0),
-                        // child: DeviceTab (device),
-                        child: new Text(device["status"]),
-                      );
-                    }).toList()
+              appBar: new AppBar(
+                title: new Text(this.room),
+                centerTitle: true,
+                leading: new GestureDetector(child: new Icon(Icons.chevron_left), onTap: () => Navigator.of(context).pop(),),
+                backgroundColor: Colors.transparent,
+                elevation: 0.0,
+                bottom: PreferredSize(
+                  preferredSize: const Size.fromHeight(58.0),
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: TabBar(
+                      controller: _tabController,
+                      isScrollable: true,
+                      indicatorSize: TabBarIndicatorSize.tab,
+                      indicator: CircleTabIndicator(color: Colors.white, radius: 2),
+                      tabs: devices.map((device) {
+                        return Tab(
+                          text: device["name"],
+                          icon: _getDeviceIcon(device["name"]),
+                        );
+                      }).toList(),
+                    ),
                   ),
                 ),
-              ]
+              ),
+              body: new Column(
+                children: <Widget>[
+                  Expanded(
+                    child: new TabBarView(
+                      controller: _tabController,
+                      children: devices.map((device) {
+                        return new Container(
+                          height: MediaQuery.of(context).size.height/2,
+                          padding: EdgeInsets.all(50.0),
+                          child: GestureDetector(child: _createDeviceTab(device), onTap: () {
+                              if (device["name"] != "Temperature"){
+                                setState(() {
+                                  device["status"] = device["status"] == "On" ? "Off" : "On"; 
+                                });
+                              }
+                            },
+                          ),
+                        );
+                      }).toList()
+                    ),
+                  ),
+                ]
+              ),
             ),
           ),
         ),
@@ -171,43 +211,5 @@ class _CirclePainter extends BoxPainter {
   void paint(Canvas canvas, Offset offset, ImageConfiguration cfg) {
     final Offset circleOffset = offset + Offset(cfg.size.width / 2, cfg.size.height - radius);
     canvas.drawCircle(circleOffset, radius, _paint);
-  }
-}
-
-class DeviceTab extends StatelessWidget {
-  final Map<String, String> device;
-
-  DeviceTab(this.device);
-
-  Widget _deviceStatusWidget() {
-    if(device["name"] == "Temperature"){
-      return new Column(
-        children: <Widget>[
-          new Icon(Icons.dashboard),
-          new Text(device["status"])
-        ],
-      );
-    } else {
-      IconData icon;
-      switch (device["status"]) {
-        case "on":
-          icon = Icons.lightbulb_outline;
-          break;
-        default:
-      }
-      return new Column(
-        children: <Widget>[
-          new Icon(icon),
-          new Text(device["status"])
-        ],
-      );
-    }    
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: _deviceStatusWidget(),
-    );
   }
 }
