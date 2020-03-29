@@ -69,83 +69,6 @@ class _HomePageState extends State<HomePage> {
     _refreshController.dispose();
     super.dispose();
   }
-  
-  Widget _memberInfo(name, status){
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 15.0),
-      child: Center(
-        child: new Column ( 
-          children: <Widget>[
-            new CircleAvatar(
-              backgroundColor: Color.fromRGBO(0, 76, 153, 0.6),
-              child: new Text(name[0], style: TextStyle(color: Colors.white),),
-            ),
-            new Text(name, style: Theme.of(context).textTheme.subtitle),
-            new Text(status, style: Theme.of(context).textTheme.caption),
-          ],
-        )
-      ),
-    );
-  }
-
-  Widget _roomWidget(room, noOfDevices) {
-    Icon icon;
-    switch (room) {
-      case "Bathroom":
-        icon = new Icon(MdiIcons.shower, size: 50, color: Color.fromRGBO(0, 76, 153, 0.6),);
-        break;
-      case "Bedroom":
-        icon = new Icon(MdiIcons.bedKingOutline, size: 50, color: Color.fromRGBO(0, 76, 153, 0.6),);
-        break;
-      case "Garage":
-        icon = new Icon(MdiIcons.garage, size: 50, color: Color.fromRGBO(0, 76, 153, 0.6),);
-        break;
-      case "Kitchen":
-        icon = new Icon(MdiIcons.stove, size: 40, color: Color.fromRGBO(0, 76, 153, 0.6),);
-        break;
-      default:
-        icon = new Icon(MdiIcons.sofa, size: 40, color: Color.fromRGBO(0, 76, 153, 0.6),);
-    }
-
-    return GestureDetector(
-      onTap: () {Navigator.push(context, MaterialPageRoute(builder: (context) => RoomPage(room)));},
-      child: new Card(
-        elevation: 10.0,
-        child: Container(
-          height: 140,
-          width: 140,
-          padding: EdgeInsets.all(10.0),
-          child: new Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              new Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget> [
-                  new Container(
-                    height: 77,
-                    child: new Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        icon,
-                      ],
-                    ),
-                  ),
-                  new Text(room, style: Theme.of(context).textTheme.display3,),
-                  new Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: <Widget>[
-                      new Text(noOfDevices + " devices", style: Theme.of(context).textTheme.display4),
-                      new Icon(Icons.keyboard_arrow_right, color: Color.fromRGBO(0, 76, 153, 0.6),)
-                    ],
-                  )
-                ]
-              )
-            ]
-          ),
-        )
-      ),
-    );
-  }
 
   Widget _scrollableCardWidget() {
     return Card(
@@ -153,7 +76,7 @@ class _HomePageState extends State<HomePage> {
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Padding(
-          padding: const EdgeInsets.all(32.0),
+          padding: const EdgeInsets.symmetric(vertical: 32.0, horizontal: 10.0),
           child: new Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: membersChildren
@@ -204,7 +127,7 @@ class _HomePageState extends State<HomePage> {
     for (var room in rooms){
       setState(() {
         roomsChildren.add(
-          _roomWidget(room['name'], room['noOfDevices'])
+          new Room(room['name'], room['noOfDevices'])
         );
       });
     }
@@ -214,7 +137,7 @@ class _HomePageState extends State<HomePage> {
     for (var member in members) {
       setState(() {
         membersChildren.add(
-          _memberInfo(member['name'], member['status'])
+          new Member(member['name'], member['status'])
         );
       });
     }
@@ -238,20 +161,20 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 35.0),
-      child: new Scaffold(
-              body: Stack(
-                children: <Widget>[
-                  Container(height: MediaQuery.of(context).size.height/2, width: MediaQuery.of(context).size.width, child: new Image(image: new AssetImage("assets/images/house.jpg"), fit: BoxFit.cover)),
-                  new SmartRefresher(
-                    controller: _refreshController,
-                    onRefresh: _onRefresh,
-                    child: new SingleChildScrollView(
-                      child: new Center(
-                        child: new Column(
-                          children: <Widget>[
-                            new AppBar(
+    return new Scaffold(
+            body: Stack(
+              children: <Widget>[
+                Container(height: MediaQuery.of(context).size.height/2, width: MediaQuery.of(context).size.width, child: new Image(image: new AssetImage("assets/images/house.jpg"), fit: BoxFit.cover)),
+                new SmartRefresher(
+                  controller: _refreshController,
+                  onRefresh: _onRefresh,
+                  child: new SingleChildScrollView(
+                    child: new Center(
+                      child: new Column(
+                        children: <Widget>[
+                          Padding(
+                            padding: const EdgeInsets.only(top: 35.0),
+                            child: new AppBar(
                               title: new Text("Hi " + name + "!", style: new TextStyle(fontWeight: FontWeight.w500, fontSize: 30),),
                               centerTitle: true,
                               backgroundColor: Colors.transparent,
@@ -267,19 +190,109 @@ class _HomePageState extends State<HomePage> {
                                 )
                               ],
                             ),
-                            Padding(
-                              padding: const EdgeInsets.only(top: 16.0, bottom: 120.0),
-                              child: new Text("Start managing your home", style: Theme.of(context).textTheme.display1),
-                            ),
-                            _contentWidget()
-                          ],
-                        )
-                      ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 16.0, bottom: 120.0),
+                            child: new Text("Start managing your home", style: Theme.of(context).textTheme.display1),
+                          ),
+                          _contentWidget()
+                        ],
+                      )
                     ),
                   ),
+                ),
+              ]
+            )
+          );
+  }
+}
+
+class Member extends StatelessWidget {
+  final String name;
+  final String status;
+  
+  Member(this.name,this.status);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 15.0),
+      child: Center(
+        child: new Column ( 
+          children: <Widget>[
+            new CircleAvatar(
+              backgroundColor: Color.fromRGBO(0, 76, 153, 0.6),
+              child: new Text(name[0], style: TextStyle(color: Colors.white),),
+            ),
+            new Text(name, style: Theme.of(context).textTheme.subtitle),
+            new Text(status, style: Theme.of(context).textTheme.caption),
+          ],
+        )
+      ),
+    );
+  }
+}
+
+class Room extends StatelessWidget {
+  final String name;
+  final String noOfDevices;
+  
+  Room(this.name, this.noOfDevices);
+
+  @override
+  Widget build(BuildContext context) {
+    Widget _getIcon(name) {
+      switch (name) {
+        case "Bathroom":
+          return new Icon(MdiIcons.shower, size: 50, color: Color.fromRGBO(0, 76, 153, 0.6),);
+        case "Bedroom":
+          return new Icon(MdiIcons.bedKingOutline, size: 50, color: Color.fromRGBO(0, 76, 153, 0.6),);
+        case "Garage":
+          return new Icon(MdiIcons.garage, size: 50, color: Color.fromRGBO(0, 76, 153, 0.6),);
+        case "Kitchen":
+          return new Icon(MdiIcons.stove, size: 40, color: Color.fromRGBO(0, 76, 153, 0.6),);
+        default:
+          return new Icon(MdiIcons.sofa, size: 40, color: Color.fromRGBO(0, 76, 153, 0.6),);
+      }
+    }
+
+    return GestureDetector(
+      onTap: () {Navigator.push(context, MaterialPageRoute(builder: (context) => RoomPage(name)));},
+      child: new Card(
+        elevation: 10.0,
+        child: Container(
+          height: 140,
+          width: 140,
+          padding: EdgeInsets.all(10.0),
+          child: new Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              new Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget> [
+                  new Container(
+                    height: 77,
+                    child: new Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        _getIcon(name),
+                      ],
+                    ),
+                  ),
+                  new Text(name, style: Theme.of(context).textTheme.display3,),
+                  new Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      new Text(noOfDevices + " devices", style: Theme.of(context).textTheme.display4),
+                      new Icon(Icons.keyboard_arrow_right, color: Color.fromRGBO(0, 76, 153, 0.6),)
+                    ],
+                  )
                 ]
               )
-            ),
+            ]
+          ),
+        )
+      ),
     );
   }
 }
