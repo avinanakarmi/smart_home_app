@@ -15,6 +15,15 @@ class RoomPage extends StatefulWidget {
 class _RoomPageState extends State<RoomPage> with SingleTickerProviderStateMixin{
   final String room;
   String backgroundImagePath;
+
+  List devices = [
+    {"name":"Lights", "status":"Off"},
+    {"name":"Temperature", "status":"25"},
+    {"name":"Router", "status":"On"},
+    {"name":"Coffee Maker", "status":"On"},
+    {"name":"Refrigirator", "status":"Off"},
+  ];
+  
   TabController _tabController;
   RefreshController _refreshController;
 
@@ -51,14 +60,6 @@ class _RoomPageState extends State<RoomPage> with SingleTickerProviderStateMixin
     super.dispose();
   }
 
-  List devices = [
-    {"name":"Lights", "status":"Off"},
-    {"name":"Temperature", "status":"25"},
-    {"name":"Router", "status":"On"},
-    {"name":"Coffee Maker", "status":"On"},
-    {"name":"Refrigirator", "status":"Off"},
-  ];
-
   void _onRefresh() async{
     await Future.delayed(Duration(milliseconds: 1000));
     _refreshController.refreshCompleted();
@@ -83,38 +84,6 @@ class _RoomPageState extends State<RoomPage> with SingleTickerProviderStateMixin
         deviceIcon = new Icon(Icons.lightbulb_outline);
     }
     return deviceIcon;
-  }
-
-  Widget _createDeviceTab(Map<String, String> device) {
-    if(device["name"] == "Temperature"){
-      return new Column(
-        children: <Widget>[
-          new Icon(MdiIcons.speedometer),
-          new GestureDetector(child: new Text(device["status"]))
-        ],
-      );
-    } else if(device["name"] == "Lights") {
-      return new Column(
-        children: <Widget>[
-          device["status"]=="On" ? new Icon(MdiIcons.lightbulbOnOutline, size: 150.0, color: Colors.white70,) : new Icon(MdiIcons.lightbulbOffOutline, size: 150.0, color: Colors.white70,),
-          new Text(device["status"], style: TextStyle(color: Colors.white70, fontSize: 20.0),)
-        ],
-      );
-    } else if(device["name"] == "Router") {
-      return new Column(
-        children: <Widget>[
-          device["status"]=="On" ? new Icon(Icons.wifi, size: 150.0, color: Colors.white70,) : new Icon(MdiIcons.wifiOff, size: 150.0, color: Colors.white70,),
-          new Text(device["status"], style: TextStyle(color: Colors.white70, fontSize: 20.0),)
-        ],
-      );
-    } else {
-      return new Column(
-        children: <Widget>[
-          device["status"]=="On" ? new Icon(MdiIcons.toggleSwitchOutline, size: 150.0, color: Colors.white70,) : new Icon(MdiIcons.toggleSwitchOffOutline, size: 150.0, color: Colors.white70,),
-          new Text(device["status"], style: TextStyle(color: Colors.white70, fontSize: 20.0),)
-        ],
-      );
-    }   
   }
 
   @override
@@ -167,7 +136,7 @@ class _RoomPageState extends State<RoomPage> with SingleTickerProviderStateMixin
                         return new Container(
                           height: MediaQuery.of(context).size.height/2,
                           padding: EdgeInsets.all(50.0),
-                          child: GestureDetector(child: _createDeviceTab(device), onTap: () {
+                          child: GestureDetector(child: new DeviceTab(device), onTap: () {
                               if (device["name"] != "Temperature"){
                                 setState(() {
                                   device["status"] = device["status"] == "On" ? "Off" : "On"; 
@@ -211,5 +180,44 @@ class _CirclePainter extends BoxPainter {
   void paint(Canvas canvas, Offset offset, ImageConfiguration cfg) {
     final Offset circleOffset = offset + Offset(cfg.size.width / 2, cfg.size.height - radius);
     canvas.drawCircle(circleOffset, radius, _paint);
+  }
+}
+
+class DeviceTab extends StatelessWidget {
+  final Map<String, String> device;
+
+  DeviceTab(this.device);
+
+  @override
+  Widget build(BuildContext context) {
+    if(device["name"] == "Temperature"){
+      return new Column(
+        children: <Widget>[
+          new Icon(MdiIcons.speedometer),
+          new Text(device["status"])
+        ],
+      );
+    } else if(device["name"] == "Lights") {
+      return new Column(
+        children: <Widget>[
+          device["status"]=="On" ? new Icon(MdiIcons.lightbulbOnOutline, size: 150.0, color: Colors.white70,) : new Icon(MdiIcons.lightbulbOffOutline, size: 150.0, color: Colors.white70,),
+          new Text(device["status"], style: TextStyle(color: Colors.white70, fontSize: 20.0),)
+        ],
+      );
+    } else if(device["name"] == "Router") {
+      return new Column(
+        children: <Widget>[
+          device["status"]=="On" ? new Icon(Icons.wifi, size: 150.0, color: Colors.white70,) : new Icon(MdiIcons.wifiOff, size: 150.0, color: Colors.white70,),
+          new Text(device["status"], style: TextStyle(color: Colors.white70, fontSize: 20.0),)
+        ],
+      );
+    } else {
+      return new Column(
+        children: <Widget>[
+          device["status"]=="On" ? new Icon(MdiIcons.toggleSwitchOutline, size: 150.0, color: Colors.white70,) : new Icon(MdiIcons.toggleSwitchOffOutline, size: 150.0, color: Colors.white70,),
+          new Text(device["status"], style: TextStyle(color: Colors.white70, fontSize: 20.0),)
+        ],
+      );
+    }
   }
 }
