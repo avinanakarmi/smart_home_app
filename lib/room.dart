@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
-
+import 'package:syncfusion_flutter_gauges/gauges.dart';
 
 class RoomPage extends StatefulWidget {
   final String room;
@@ -18,7 +18,7 @@ class _RoomPageState extends State<RoomPage> with SingleTickerProviderStateMixin
 
   List devices = [
     {"name":"Lights", "status":"Off"},
-    {"name":"Temperature", "status":"25"},
+    {"name":"Temperature", "status":"35", "currentRoomTemp" : "20"},
     {"name":"Router", "status":"On"},
     {"name":"Coffee Maker", "status":"On"},
     {"name":"Refrigirator", "status":"Off"},
@@ -193,8 +193,8 @@ class DeviceTab extends StatelessWidget {
     if(device["name"] == "Temperature"){
       return new Column(
         children: <Widget>[
-          new Icon(MdiIcons.speedometer),
-          new Text(device["status"])
+          new TemperatureMonitor(device["status"]=="Off" ? "0" : device["status"]),
+          new Text("Current Temperature : " + device["currentRoomTemp"] + "℃", style: TextStyle(color: Colors.white70, fontSize: 15),)
         ],
       );
     } else if(device["name"] == "Lights") {
@@ -219,5 +219,84 @@ class DeviceTab extends StatelessWidget {
         ],
       );
     }
+  }
+}
+
+class TemperatureMonitor extends StatefulWidget {
+  final String acSetTo;
+
+  TemperatureMonitor(this.acSetTo);
+
+  @override
+  _TemperatureMonitorState createState() => _TemperatureMonitorState(acSetTo);
+}
+
+class _TemperatureMonitorState extends State<TemperatureMonitor> {
+  final String acSetTo;
+
+  _TemperatureMonitorState(this.acSetTo);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 200,
+      width: 200,
+      padding: EdgeInsets.only(top: 15),
+      child: SfRadialGauge(
+        axes: <RadialAxis>[
+          new RadialAxis(
+            minimum: 0, 
+            maximum: 100, 
+            labelOffset: 30,
+            startAngle: 170,
+            endAngle: 10,
+            radiusFactor: 1.2,
+            showLabels: false,
+            axisLineStyle: AxisLineStyle(
+              thicknessUnit: GaugeSizeUnit.factor,
+              thickness: 0.03, 
+              gradient: const SweepGradient(
+                colors: <Color>[Colors.transparent, Colors.blue, Colors.white, Colors.red, Colors.transparent],
+                stops: <double>[0.0, 0.25, 0.50, 0.75, 1]
+            ),
+              cornerStyle: CornerStyle.bothCurve),
+            majorTickStyle: MajorTickStyle(length: 0),
+            minorTickStyle: MinorTickStyle(length: 0),
+            pointers: <GaugePointer>[
+              MarkerPointer(
+                value: double.parse(acSetTo),
+                markerType: MarkerType.circle,
+                color: Color.fromRGBO(0, 76, 153, 0.8),
+                borderColor: Color.fromRGBO(255, 255, 255, 0.8),
+                borderWidth: 2,
+                markerHeight: 10,
+                markerWidth: 10,
+                enableAnimation: true, 
+                animationDuration: 1500,
+                enableDragging: true,
+              )
+            ],
+            annotations: <GaugeAnnotation> [
+              GaugeAnnotation(
+                widget: Container(
+                  child: Text(acSetTo + "℃",style: TextStyle(fontSize: 40, color: Color.fromRGBO(255, 255, 255, 0.8)))
+                ),
+                angle: double.parse(acSetTo)
+              )
+            ]
+          ),
+          new RadialAxis(
+            showAxisLine: false,
+            showLabels: false,
+            startAngle: 170,
+            endAngle: 10,
+            majorTickStyle: MajorTickStyle(length: 10, color: Color.fromRGBO(255, 255, 255, 0.3)),
+            minorTickStyle: MinorTickStyle(length: 10, color: Color.fromRGBO(255, 255, 255, 0.3)),
+            interval: 2,
+            radiusFactor: 1.05
+          )
+        ]
+      ),
+    );
   }
 }
